@@ -31,7 +31,13 @@ pip install -r requirements.txt
 python -c "from data.Dataprocess_VMD import process_with_vmd; process_with_vmd('RML2016.10a_dict.pkl', 'RML2016.10a_vmd_float32.pkl')"
 ```
 
-3. Set `data_filepath` at the top of `main.py` to the generated `.pkl` file.
+3. Place the generated file at `dataset/RML2016.10a_vmd_float32.pkl` (default location), or point to it anywhere with `--data`:
+
+```bash
+python main.py --data /path/to/RML2016.10a_vmd_float32.pkl
+```
+
+If the dataset is not found, `main.py` exits early with instructions.
 
 ## Usage
 
@@ -42,7 +48,7 @@ All configuration is at the top of `main.py`:
 | `train_enabled` | Set `True` to train; weights and logs are saved to `weights/rml16a/<timestamp>/` and `training_loss/<timestamp>/` |
 | `eval_enabled` | Set `True` to evaluate; metrics and figures are saved to `acc/<timestamp>/` and `figure/<timestamp>/` |
 | `eval_weight_filepath` | Checkpoint to load for evaluation (a pre-trained model is provided at `weights/rml16a/weights_rml16.pth`) |
-| `data_filepath` | Path to the VMD-preprocessed dataset |
+| `--data` | Path to the VMD-preprocessed dataset (default: `dataset/RML2016.10a_vmd_float32.pkl`) |
 
 Run:
 

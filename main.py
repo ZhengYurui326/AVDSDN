@@ -1,3 +1,4 @@
+import argparse
 import os
 from datetime import datetime
 
@@ -12,6 +13,11 @@ import tools
 from train import Train
 from predict import predict
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--data', default='dataset/RML2016.10a_vmd_float32.pkl',
+                    help='path to the VMD-preprocessed RML2016.10a dataset (.pkl)')
+args = parser.parse_args()
+
 train_enabled = False
 eval_enabled = True
 
@@ -22,7 +28,15 @@ if torch.cuda.is_available():
 else:
     print(device)
 
-data_filepath = '/data/zhengyurui/data/rmldata/rml16a/RML2016.10a_vmd_float32.pkl'
+data_filepath = args.data
+if not os.path.isfile(data_filepath):
+    raise FileNotFoundError(
+        f'Dataset not found: {data_filepath}\n'
+        'Prepare the dataset first (see README): download RML2016.10a from '
+        'https://www.deepsig.ai/datasets/, generate the VMD-decomposed .pkl with '
+        'process_with_vmd(), place it at the default location, or pass '
+        '--data /path/to/RML2016.10a_vmd_float32.pkl.'
+    )
 
 run_time = datetime.now().strftime('%Y%m%d_%H%M%S')
 

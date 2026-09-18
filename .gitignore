@@ -11,9 +11,11 @@ acc/
 figure/
 training_loss/
 predictresult/
+dataset/
 
 weights/rml16a/*
 !weights/rml16a/weights_rml16.pth
 
 .DS_Store
 *.log
+paper/

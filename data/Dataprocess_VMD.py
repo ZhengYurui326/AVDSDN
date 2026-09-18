@@ -51,7 +51,7 @@ def process_with_vmd(input_path, output_path):
         pickle.dump(Xd_vmd, f)
 
 
-def load_data_vmd(seed=3407, filename=r'/data/zhengyurui/data/rmldata/rml2016.10a/RML2016.10a_vmd_float32.pkl'):
+def load_data_vmd(seed=3407, filename='dataset/RML2016.10a_vmd_float32.pkl'):
     Xd = pickle.load(open(filename, 'rb'), encoding='iso-8859-1')
     mods, snrs = [sorted(list(set([k[j] for k in Xd.keys()]))) for j in [0, 1]]
 
