@@ -1,0 +1,8 @@
+torch>=2.0
+einops
+timm
+vmdpy
+numpy
+pandas
+matplotlib
+tqdm
