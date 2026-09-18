@@ -25,7 +25,7 @@ The model has three main components:
 - **Cross-stream attention fusion (CSAF):** adaptively combines the complementary features before classification.
 
 <p align="center">
-  <img src="doc/famework.png" width="95%" alt="AVDSDN training and inference framework">
+  <img src="doc/framework.png" width="95%" alt="AVDSDN training and inference framework">
 </p>
 
 ## Architecture
@@ -98,7 +98,7 @@ Download `RML2016.10a_dict.pkl` from the [DeepSig dataset page](https://www.deep
 
 ### 2. Generate the VMD representation
 
-VMD is performed offline because decomposing the complete dataset on CPU is computationally expensive. From the repository root, run:
+VMD is performed offline because decomposing the complete dataset on CPU/GPU is computationally expensive. From the repository root, run:
 
 ```bash
 mkdir -p dataset
