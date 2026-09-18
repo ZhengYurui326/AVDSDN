@@ -7,6 +7,7 @@
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![Dataset](https://img.shields.io/badge/Dataset-RML2016.10a-4C8CBF)](https://www.deepsig.ai/datasets/)
+[![Paper](https://img.shields.io/badge/Paper-IEEE%20Xplore-00629B?logo=ieee&logoColor=white)](https://ieeexplore.ieee.org/document/11381447)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 Official PyTorch implementation of **AVDSDN** for robust automatic modulation classification (AMC) from raw I/Q samples.
@@ -24,6 +25,12 @@ The model has three main components:
 - **Cross-stream attention fusion (CSAF):** adaptively combines the complementary features before classification.
 
 <p align="center">
+  <img src="doc/famework.png" width="95%" alt="AVDSDN training and inference framework">
+</p>
+
+## Architecture
+
+<p align="center">
   <img src="doc/avdsdn_architecture.png" width="95%" alt="AVDSDN architecture">
 </p>
 
@@ -33,30 +40,16 @@ The model has three main components:
 - Decoupled CNN and Transformer streams for complementary local–spatial and global–temporal representations.
 - Pretrained checkpoint and a complete evaluation pipeline for RML2016.10a.
 - Strong robustness in the low-SNR regime.
-- Pretrained RML2016.10a checkpoint included for evaluation.
 
-## Paper-reported results
+## Paper
 
-The following results are reported in the manuscript. MAA and MAF denote mean average accuracy and mean average F1 score over all SNR levels. Inference latency was measured with FP32 on an NVIDIA RTX 4090.
+The paper is available on [IEEE Xplore](https://ieeexplore.ieee.org/document/11381447):
 
-| Dataset | Accuracy at SNR <= 0 dB | Accuracy at SNR > 0 dB | MAA | MAF | Parameters | FLOPs | Latency |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| RML2016.10a | **36.12%** | **93.36%** | **64.75%** | **67.42%** | 268.346K | 21.50M | 11.66 ms |
-| RML22 | **57.17%** | **94.90%** | **76.93%** | **76.56%** | 268.089K | 21.50M | 11.82 ms |
-| HisarMod2019.1 | **76.86%** | **98.91%** | **87.89%** | **85.46%** | 373.641K | 348.80M | 12.56 ms |
+> Y. Zheng, S. Huang, P. Zhang, Y. Zhang, and Z. Feng, "Synergistic Dual-Stream Neural Network Based on Adaptive Variational Mode Decomposition Denoising for Automatic Modulation Classification," *IEEE Transactions on Cognitive Communications and Networking*, vol. 12, pp. 6061–6075, 2026.
 
-<p align="center">
-  <img src="doc/rml2016_accuracy.png" width="68%" alt="Accuracy versus SNR on RML2016.10a">
-</p>
+## Release scope
 
-The AVD module consistently improves the tested AMC backbones, with its largest gains appearing in the low-to-medium SNR range.
-
-<p align="center">
-  <img src="doc/avd_ablation.png" width="75%" alt="Effectiveness of adaptive VMD denoising">
-</p>
-
-> [!NOTE]
-> This release currently provides the model, preprocessing pipeline, pretrained checkpoint, training code, and evaluation code for **RML2016.10a**. Dataset-specific pipelines for RML22 and HisarMod2019.1, as well as the TensorRT INT8 deployment pipeline discussed in the manuscript, are not included in the current release.
+This release provides the model, VMD preprocessing pipeline, pretrained checkpoint, training code, and evaluation code for **RML2016.10a**. The current classifier is configured for its 11 modulation classes. Dataset-specific pipelines for RML22 and HisarMod2019.1, and the TensorRT INT8 deployment pipeline discussed in the paper, are not included.
 
 ## Repository structure
 
@@ -95,25 +88,15 @@ pip install -r requirements.txt
 
 A CUDA-capable GPU is recommended. If you need a specific CUDA build, install the matching PyTorch package from the [official installation guide](https://pytorch.org/get-started/locally/) before installing the remaining dependencies.
 
-## Dataset preparation
+## Usage
 
-### Option A: download the preprocessed dataset (recommended)
+Run all commands below from the repository root. The complete workflow is: download RML2016.10a, generate its five-mode VMD representation once, and then run either evaluation or training through `main.py`.
 
-The VMD-preprocessed dataset (1.3 GB) is available as a release asset:
-
-```bash
-mkdir -p dataset
-wget -O dataset/RML2016.10a_vmd_float32.pkl \
-    https://github.com/ZhengYurui326/AVDSDN/releases/download/v1.0.0/RML2016.10a_vmd_float32.pkl
-```
-
-### Option B: generate it yourself
-
-#### 1. Download RML2016.10a
+### 1. Download RML2016.10a
 
 Download `RML2016.10a_dict.pkl` from the [DeepSig dataset page](https://www.deepsig.ai/datasets/). The dataset contains 220,000 examples from 11 modulation classes, with SNR values from -20 dB to 18 dB and 128 I/Q samples per example.
 
-#### 2. Generate the VMD representation
+### 2. Generate the VMD representation
 
 VMD is performed offline because decomposing the complete dataset on CPU is computationally expensive. From the repository root, run:
 
@@ -134,15 +117,25 @@ The preprocessing configuration used by this release is:
 
 The generated file is intentionally excluded from Git because of its size.
 
-## Evaluation
+### 3. Evaluate the pretrained model
 
-The repository includes `weights/rml16a/weights_rml16.pth`. Evaluation is enabled by default in `main.py`:
+The repository includes `weights/rml16a/weights_rml16.pth`. The default settings in `main.py` are already configured to evaluate this checkpoint:
+
+```python
+train_enabled = False
+eval_enabled = True
+eval_weight_filepath = 'weights/rml16a/weights_rml16.pth'
+```
+
+Start evaluation with:
 
 ```bash
 python main.py --data dataset/RML2016.10a_vmd_float32.pkl
 ```
 
-The script automatically uses `cuda:0` when CUDA is available and otherwise falls back to CPU. Evaluation produces:
+The script automatically uses `cuda:0` when CUDA is available and otherwise falls back to CPU. It first creates the same deterministic 60/20/20 split used by the training pipeline, applies full-sample L2 normalization, loads the checkpoint, and evaluates the test split.
+
+Evaluation produces:
 
 - overall accuracy and mean F1 score;
 - accuracy for every SNR level;
@@ -151,14 +144,16 @@ The script automatically uses `cuda:0` when CUDA is available and otherwise fall
 - CSV metric files under `acc/<timestamp>/`;
 - figures under `figure/<timestamp>/`.
 
-## Training
+### 4. Train from scratch
 
-Training and evaluation are controlled near the top of `main.py`:
+Set the run switches near the top of `main.py` as follows:
 
 ```python
 train_enabled = True
-eval_enabled = True
+eval_enabled = False
 ```
+
+Keeping evaluation disabled during this run avoids evaluating the bundled checkpoint immediately after training. Start training with:
 
 Then run the same entry point:
 
@@ -166,21 +161,41 @@ Then run the same entry point:
 python main.py --data dataset/RML2016.10a_vmd_float32.pkl
 ```
 
-Default training configuration:
+The best checkpoint is selected by validation loss and saved to:
 
-| Setting | Value |
-|---|---:|
-| Train / validation / test split | 60% / 20% / 20% per modulation–SNR block |
-| Random seed | 3409 |
-| Epochs | 200 |
-| Batch size | 256 |
-| Optimizer | AdamW |
-| Initial learning rate | 0.005 |
-| Scheduler | ReduceLROnPlateau, factor 0.5, patience 6 |
-| Loss | Cross-entropy |
-| Early-stopping patience | 100 epochs |
+```text
+weights/rml16a/<timestamp>/weights_rml16.pth
+```
 
-The best checkpoint is selected by validation loss and saved to `weights/rml16a/<timestamp>/`. Training logs are written to `training_loss/<timestamp>/`.
+The validation history is saved to:
+
+```text
+training_loss/<timestamp>/training_loss.csv
+```
+
+### 5. Evaluate a newly trained checkpoint
+
+After training, update these values in `main.py`:
+
+```python
+train_enabled = False
+eval_enabled = True
+eval_weight_filepath = 'weights/rml16a/<timestamp>/weights_rml16.pth'
+```
+
+Replace `<timestamp>` with the directory printed by the training run, then execute:
+
+```bash
+python main.py --data dataset/RML2016.10a_vmd_float32.pkl
+```
+
+### Run-mode reference
+
+| Goal | `train_enabled` | `eval_enabled` | `eval_weight_filepath` |
+|---|:---:|:---:|---|
+| Evaluate the included checkpoint | `False` | `True` | `weights/rml16a/weights_rml16.pth` |
+| Train a new model | `True` | `False` | Not used |
+| Evaluate a new checkpoint | `False` | `True` | Path to the new `.pth` file |
 
 ## Reproducibility notes
 
@@ -192,26 +207,26 @@ The best checkpoint is selected by validation loss and saved to `weights/rml16a/
 
 ## Citation
 
-If you find this project useful in your research, please cite the manuscript:
+If you find this project useful in your research, please cite the paper:
 
 ```bibtex
-@misc{zheng2026avdsdn,
-  title  = {Synergistic Dual-stream Neural Network Based on Adaptive Variational Mode Decomposition Denoising for Automatic Modulation Classification},
-  author = {Zheng, Yurui and Huang, Sai and Zhang, Pengcheng and Zhang, Yifan and Feng, Zhiyong},
-  year   = {2026},
-  note   = {Manuscript}
+@article{zheng2026avdsdn,
+  title   = {Synergistic Dual-Stream Neural Network Based on Adaptive Variational Mode Decomposition Denoising for Automatic Modulation Classification},
+  author  = {Zheng, Yurui and Huang, Sai and Zhang, Pengcheng and Zhang, Yifan and Feng, Zhiyong},
+  journal = {IEEE Transactions on Cognitive Communications and Networking},
+  volume  = {12},
+  pages   = {6061--6075},
+  year    = {2026},
+  doi     = {10.1109/TCCN.2026.3662331}
 }
 ```
 
-Publication metadata and a paper link will be added after the final version becomes publicly available.
-
 ## Acknowledgements
 
-This implementation builds on ideas and open-source resources from the broader AMC and deformable-attention communities. In particular:
+We thank the authors of the following open-source projects for making their work available:
 
-- RML2016.10a is provided by [DeepSig](https://www.deepsig.ai/datasets/).
-- The data-processing workflow was adapted from [leena201818/radiom](https://github.com/leena201818/radiom).
-- The deformable-attention design is inspired by [DAT: Vision Transformer with Deformable Attention](https://github.com/LeapLabTHU/DAT).
+- [AMR-Benchmark](https://github.com/Richardzhangxx/AMR-Benchmark), which provides a valuable benchmark and reference implementations for automatic modulation recognition.
+- [DAT: Vision Transformer with Deformable Attention](https://github.com/LeapLabTHU/DAT), which inspired the deformable-attention implementation used in this project.
 
 ## License
 
