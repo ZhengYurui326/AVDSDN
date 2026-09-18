@@ -6,7 +6,7 @@ from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 import torch.optim as optim
 
-from model.X_Model import X_Model
+from model.AVDSDN import AVDSDN
 from data.Dataprocess_VMD import load_data_vmd
 import tools
 from train import Train
@@ -86,7 +86,7 @@ print(f"Train Data Shape: {X_train.shape}, Input Shape: {in_shp}")
 print(f"Classes: {mods}")
 print(f"Batch_size: {batch_size}")
 
-net = X_Model().to(device)
+net = AVDSDN().to(device)
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.AdamW(net.parameters(), lr=learning_rate)

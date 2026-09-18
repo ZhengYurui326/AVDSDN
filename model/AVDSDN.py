@@ -7,9 +7,9 @@ from model.Transformer_Stage.Transformer_Stage import Transformer_Stage
 from model.Feature_Fusion.FF_Stage2 import FFstage2
 
 
-class X_Model(nn.Module):
+class AVDSDN(nn.Module):
     def __init__(self):
-        super(X_Model, self).__init__()
+        super(AVDSDN, self).__init__()
 
         self.signal_augment = SignalAugmentNetwork(kaiming=False)
 
